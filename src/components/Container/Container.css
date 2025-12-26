@@ -1,0 +1,242 @@
+/* ============================================
+   Container Component Styles
+   Control flow containers with professional look
+   ============================================ */
+
+.container {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--color-bg-surface);
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xs);
+  transition:
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast);
+}
+
+/* Container type backgrounds */
+.container--switch {
+  background-color: var(--color-container-switch);
+  border-color: var(--color-container-switch-border);
+}
+
+.container--forEach {
+  background-color: var(--color-container-foreach);
+  border-color: var(--color-container-foreach-border);
+}
+
+.container--scope {
+  background-color: var(--color-container-scope);
+  border-color: var(--color-container-scope-border);
+}
+
+.container--otherwise,
+.container--route {
+  background-color: rgba(255, 255, 255, 0.6);
+}
+
+/* Collapsed state */
+.container--collapsed {
+  min-width: 200px;
+}
+
+/* Hover state */
+.container--hovered {
+  box-shadow: var(--shadow-sm);
+}
+
+/* Selected state */
+.container--selected {
+  box-shadow:
+    0 0 0 2px var(--color-accent-primary),
+    var(--shadow-sm);
+}
+
+/* Connection ports */
+.container__port {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  background-color: var(--color-bg-surface);
+  border: 2px solid var(--color-border-strong);
+  border-radius: 50%;
+  z-index: 10;
+}
+
+.container__port--input {
+  left: -5px;
+  top: 20px;
+}
+
+.container__port--output {
+  right: -5px;
+  top: 20px;
+}
+
+.container--hovered .container__port,
+.container--selected .container__port {
+  background-color: var(--color-accent-primary);
+  border-color: var(--color-accent-primary);
+}
+
+/* Header */
+.container__header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  background-color: rgba(255, 255, 255, 0.5);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  cursor: pointer;
+  user-select: none;
+}
+
+.container--collapsed .container__header {
+  border-radius: var(--radius-lg);
+  border-bottom: none;
+}
+
+/* Icon */
+.container__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  color: var(--color-text-secondary);
+}
+
+.container__icon svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* Icon colors by type */
+.container__icon--switch { color: #b45309; }
+.container__icon--forEach { color: #1d4ed8; }
+.container__icon--scope { color: var(--color-text-secondary); }
+.container__icon--otherwise { color: #dc2626; }
+.container__icon--route { color: #059669; }
+
+/* Header content */
+.container__header-content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.container__name {
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  color: var(--color-text-primary);
+  line-height: var(--leading-tight);
+}
+
+.container__condition {
+  font-size: var(--text-xs);
+  color: var(--color-text-tertiary);
+  font-family: var(--font-mono);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Toggle button */
+.container__toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  background: none;
+  border: none;
+  border-radius: var(--radius-sm);
+  color: var(--color-text-tertiary);
+  cursor: pointer;
+  transition: background-color var(--transition-fast);
+}
+
+.container__toggle:hover {
+  background-color: rgba(0, 0, 0, 0.06);
+  color: var(--color-text-secondary);
+}
+
+.container__toggle svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* Content area */
+.container__content {
+  position: relative;
+  padding: var(--space-4);
+  min-height: 60px;
+}
+
+/* Routes for Switch container */
+.container__routes {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.container__route {
+  background-color: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.container__route--otherwise {
+  background-color: rgba(254, 226, 226, 0.5);
+  border-color: rgba(252, 165, 165, 0.5);
+}
+
+.container__route-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  background-color: rgba(0, 0, 0, 0.02);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+}
+
+.container__route-name {
+  font-size: var(--text-xs);
+  font-weight: var(--font-semibold);
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+}
+
+.container__route-condition {
+  font-size: var(--text-xs);
+  color: var(--color-text-tertiary);
+  font-family: var(--font-mono);
+}
+
+.container__route-content {
+  position: relative;
+  padding: var(--space-3);
+  min-height: 50px;
+}
+
+/* Nested containers */
+.container .container {
+  position: relative;
+  left: auto;
+  top: auto;
+}
+
+/* Focus state */
+.container__header:focus-visible {
+  outline: 2px solid var(--color-border-focus);
+  outline-offset: -2px;
+}
