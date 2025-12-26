@@ -28,11 +28,10 @@ export function Canvas() {
 
   const { expandedContainers } = useUIStore();
 
-  // Pan handling
+  // Pan handling with space key
   const handleMouseDown = useCallback(
     (e: React.MouseEvent) => {
-      // Only start panning on middle mouse button or left button on canvas
-      if (e.button === 1 || (e.button === 0 && e.target === canvasRef.current)) {
+      if (e.button === 1 || (e.button === 0 && (e.target === canvasRef.current || e.target === contentRef.current))) {
         e.preventDefault();
         setIsPanning(true);
       }
@@ -85,7 +84,6 @@ export function Canvas() {
       if (e.key === 'Escape') {
         selectNode(null);
       }
-      // Zoom shortcuts
       if (e.ctrlKey || e.metaKey) {
         if (e.key === '=' || e.key === '+') {
           e.preventDefault();
@@ -122,10 +120,28 @@ export function Canvas() {
 
   if (!flow) return null;
 
-  // Render nodes
-  const renderNode = (node: ActivityNode | ControlFlowContainer, index: number) => {
+  // Collect all nodes including nested ones for edge rendering
+  const getAllNodes = (nodes: (ActivityNode | ControlFlowContainer)[]): (ActivityNode | ControlFlowContainer)[] => {
+    const result: (ActivityNode | ControlFlowContainer)[] = [];
+    for (const node of nodes) {
+      result.push(node);
+      if ('children' in node && node.children) {
+        result.push(...getAllNodes(node.children));
+      }
+      if ('routes' in node && node.routes) {
+        for (const route of node.routes) {
+          result.push(...getAllNodes(route.children));
+        }
+      }
+    }
+    return result;
+  };
+
+  const allNodes = getAllNodes(flow.nodes);
+
+  // Render node
+  const renderNode = (node: ActivityNode | ControlFlowContainer) => {
     if ('children' in node || 'routes' in node) {
-      // It's a container
       return (
         <Container
           key={node.id}
@@ -135,7 +151,6 @@ export function Canvas() {
         />
       );
     } else {
-      // It's an activity
       return (
         <ActivityCard
           key={node.id}
@@ -157,26 +172,22 @@ export function Canvas() {
       <svg className="canvas-grid" xmlns="http://www.w3.org/2000/svg">
         <defs>
           <pattern
-            id="grid-small"
-            width={20 * viewport.zoom}
-            height={20 * viewport.zoom}
+            id="grid-dots"
+            width={20}
+            height={20}
             patternUnits="userSpaceOnUse"
-            patternTransform={`translate(${viewport.x % (20 * viewport.zoom)}, ${viewport.y % (20 * viewport.zoom)})`}
           >
-            <circle cx="1" cy="1" r="0.5" fill="var(--color-border-subtle)" />
-          </pattern>
-          <pattern
-            id="grid-large"
-            width={100 * viewport.zoom}
-            height={100 * viewport.zoom}
-            patternUnits="userSpaceOnUse"
-            patternTransform={`translate(${viewport.x % (100 * viewport.zoom)}, ${viewport.y % (100 * viewport.zoom)})`}
-          >
-            <circle cx="1" cy="1" r="1" fill="var(--color-border-default)" />
+            <circle cx="10" cy="10" r="1" fill="#e0e0e0" />
           </pattern>
         </defs>
-        <rect width="100%" height="100%" fill="url(#grid-small)" />
-        <rect width="100%" height="100%" fill="url(#grid-large)" />
+        <rect
+          width="100%"
+          height="100%"
+          fill="url(#grid-dots)"
+          style={{
+            transform: `translate(${viewport.x % 20}px, ${viewport.y % 20}px)`
+          }}
+        />
       </svg>
 
       {/* Canvas content with transform */}
@@ -187,13 +198,30 @@ export function Canvas() {
           transform: `translate(${viewport.x}px, ${viewport.y}px) scale(${viewport.zoom})`,
         }}
       >
-        {/* Connection lines (rendered first, behind nodes) */}
-        <svg className="canvas-connections">
+        {/* Connection lines SVG - large fixed size */}
+        <svg
+          className="canvas-connections"
+          width="5000"
+          height="3000"
+          style={{ position: 'absolute', top: 0, left: 0, overflow: 'visible', pointerEvents: 'none' }}
+        >
+          <defs>
+            <marker
+              id="arrowhead"
+              markerWidth="8"
+              markerHeight="6"
+              refX="7"
+              refY="3"
+              orient="auto"
+            >
+              <polygon points="0 0, 8 3, 0 6" fill="#9ca3af" />
+            </marker>
+          </defs>
           {flow.edges.map((edge) => (
             <ConnectionLine
               key={edge.id}
               edge={edge}
-              nodes={flow.nodes}
+              nodes={allNodes}
             />
           ))}
         </svg>
