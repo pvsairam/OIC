@@ -1,0 +1,468 @@
+/* ============================================
+   Flow Viewer Styles
+   OIC-inspired flow canvas design
+   ============================================ */
+
+.flow-viewer {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background: #f0f2f5;
+}
+
+/* Header */
+.flow-viewer__header {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 12px 24px;
+  background: white;
+  border-bottom: 1px solid #e5e7eb;
+  z-index: 100;
+}
+
+.flow-viewer__back {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: none;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.flow-viewer__back:hover {
+  background: #f3f4f6;
+  border-color: #d1d5db;
+}
+
+.flow-viewer__back svg {
+  width: 16px;
+  height: 16px;
+}
+
+.flow-viewer__title {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.flow-viewer__title h1 {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0;
+}
+
+.flow-viewer__version {
+  padding: 3px 10px;
+  background: #e8f2ff;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #0066CC;
+}
+
+.flow-viewer__controls {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px;
+  background: #f3f4f6;
+  border-radius: 8px;
+}
+
+.flow-viewer__controls button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: none;
+  border: none;
+  border-radius: 6px;
+  color: #6b7280;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.flow-viewer__controls button:hover {
+  background: white;
+  color: #374151;
+}
+
+.flow-viewer__controls button svg {
+  width: 18px;
+  height: 18px;
+}
+
+.flow-viewer__zoom {
+  min-width: 50px;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 500;
+  color: #6b7280;
+  font-family: 'SF Mono', Monaco, monospace;
+}
+
+/* Canvas */
+.flow-viewer__canvas {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  cursor: grab;
+}
+
+.flow-viewer__canvas--panning {
+  cursor: grabbing;
+}
+
+.flow-viewer__grid {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.flow-viewer__content {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform-origin: 0 0;
+}
+
+.flow-viewer__edges {
+  position: absolute;
+  top: 0;
+  left: 0;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.flow-viewer__nodes {
+  position: relative;
+}
+
+/* Flow Edge */
+.flow-edge {
+  transition: stroke 0.15s ease;
+}
+
+/* Flow Node */
+.flow-node {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 180px;
+  height: 56px;
+  padding: 0 14px;
+  background: white;
+  border: 2px solid #e5e7eb;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.flow-node:hover {
+  border-color: #0066CC;
+  box-shadow: 0 4px 12px rgba(0, 102, 204, 0.15);
+  transform: translateY(-1px);
+}
+
+.flow-node--selected {
+  border-color: #0066CC;
+  box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.2);
+}
+
+/* Node ports */
+.flow-node__port {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  background: white;
+  border: 2px solid #94a3b8;
+  border-radius: 50%;
+  top: 50%;
+  transform: translateY(-50%);
+  transition: all 0.15s ease;
+}
+
+.flow-node__port--in {
+  left: -6px;
+}
+
+.flow-node__port--out {
+  right: -6px;
+}
+
+.flow-node:hover .flow-node__port,
+.flow-node--selected .flow-node__port {
+  border-color: #0066CC;
+  background: #0066CC;
+}
+
+/* Node icon */
+.flow-node__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+
+.flow-node__icon svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* Icon colors by type */
+.flow-node__icon--start {
+  background: #dcfce7;
+  color: #16a34a;
+}
+
+.flow-node__icon--end {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.flow-node__icon--map {
+  background: #e0e7ff;
+  color: #4f46e5;
+}
+
+.flow-node__icon--invoke {
+  background: #dbeafe;
+  color: #2563eb;
+}
+
+.flow-node__icon--stageFile {
+  background: #cffafe;
+  color: #0891b2;
+}
+
+.flow-node__icon--assign {
+  background: #d1fae5;
+  color: #059669;
+}
+
+.flow-node__icon--lookup {
+  background: #ede9fe;
+  color: #7c3aed;
+}
+
+.flow-node__icon--notification {
+  background: #ffedd5;
+  color: #ea580c;
+}
+
+.flow-node__icon--javascript {
+  background: #fef3c7;
+  color: #d97706;
+}
+
+.flow-node__icon--logger {
+  background: #f3f4f6;
+  color: #6b7280;
+}
+
+/* Node content */
+.flow-node__content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.flow-node__name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1f2937;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.flow-node__type {
+  font-size: 11px;
+  color: #6b7280;
+}
+
+/* Container nodes */
+.flow-node--container {
+  flex-direction: column;
+  align-items: stretch;
+  padding: 0;
+  height: auto;
+  min-height: 150px;
+  background: #fafbfc;
+}
+
+.flow-node__container-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: white;
+  border-bottom: 1px solid #e5e7eb;
+  border-radius: 8px 8px 0 0;
+}
+
+.flow-node__container-type {
+  padding: 2px 8px;
+  background: #f3f4f6;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+}
+
+.flow-node__container-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+/* Node Panel (Side Panel) */
+.node-panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 340px;
+  height: 100vh;
+  background: white;
+  border-left: 1px solid #e5e7eb;
+  box-shadow: -4px 0 20px rgba(0, 0, 0, 0.08);
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+}
+
+.node-panel__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.node-panel__header h2 {
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.node-panel__close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background: none;
+  border: none;
+  border-radius: 6px;
+  color: #9ca3af;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.node-panel__close:hover {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.node-panel__close svg {
+  width: 18px;
+  height: 18px;
+}
+
+.node-panel__content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+}
+
+.node-panel__section {
+  margin-bottom: 24px;
+}
+
+.node-panel__section:last-child {
+  margin-bottom: 0;
+}
+
+.node-panel__section label {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  color: #9ca3af;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 8px;
+}
+
+.node-panel__section p {
+  font-size: 14px;
+  color: #4b5563;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.node-panel__name {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0 0 4px;
+}
+
+.node-panel__type {
+  font-size: 13px;
+  color: #6b7280;
+}
+
+.node-panel__props {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.node-panel__prop {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.node-panel__prop-key {
+  font-size: 12px;
+  color: #9ca3af;
+}
+
+.node-panel__prop-value {
+  font-size: 14px;
+  color: #1f2937;
+  word-break: break-word;
+}
+
+.node-panel__prop-value--code {
+  font-family: 'SF Mono', Monaco, monospace;
+  font-size: 12px;
+  padding: 6px 10px;
+  background: #f3f4f6;
+  border-radius: 6px;
+}

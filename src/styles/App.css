@@ -1,18 +1,4 @@
-/* ============================================
-   App Layout Styles
-   ============================================ */
-
+/* App Styles */
 .app {
-  display: flex;
-  flex-direction: column;
-  width: 100vw;
-  height: 100vh;
-  overflow: hidden;
-  background-color: var(--color-bg-canvas);
-}
-
-.app-main {
-  position: relative;
-  flex: 1;
-  overflow: hidden;
+  min-height: 100vh;
 }

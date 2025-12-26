@@ -1,121 +1,157 @@
 /* ============================================
    OIC Flow Visualizer - State Management
-   Zustand store for application state
    ============================================ */
 
 import { create } from 'zustand';
-import type {
-  IntegrationFlow,
-  ViewportState,
-  ActivityNode,
-  ControlFlowContainer,
-  BreadcrumbItem,
-} from '../types';
+import type { IntegrationFlow, ViewportState, ActivityNode, ControlFlowContainer } from '../types';
 
 // ============================================
-// Canvas Store
+// Types
 // ============================================
 
-interface CanvasStore {
-  // Flow data
-  flow: IntegrationFlow | null;
-  setFlow: (flow: IntegrationFlow | null) => void;
+export type AppView = 'dashboard' | 'flow';
 
-  // Viewport
-  viewport: ViewportState;
-  setViewport: (viewport: ViewportState) => void;
-  pan: (deltaX: number, deltaY: number) => void;
-  zoom: (factor: number, centerX?: number, centerY?: number) => void;
-  resetViewport: () => void;
-
-  // Selection
-  selectedNodeId: string | null;
-  selectNode: (nodeId: string | null) => void;
-
-  // Hover
-  hoveredNodeId: string | null;
-  setHoveredNode: (nodeId: string | null) => void;
-
-  // Interaction states
-  isPanning: boolean;
-  setIsPanning: (isPanning: boolean) => void;
-
-  // Find node by ID
-  findNode: (nodeId: string) => ActivityNode | ControlFlowContainer | null;
+export interface StoredIntegration {
+  id: string;
+  name: string;
+  displayName: string;
+  description?: string;
+  version?: string;
+  importedAt: string;
+  nodeCount: number;
+  flow: IntegrationFlow;
 }
 
-const DEFAULT_VIEWPORT: ViewportState = {
-  x: 0,
-  y: 0,
-  zoom: 1,
-};
+// ============================================
+// App Store
+// ============================================
 
-const MIN_ZOOM = 0.25;
-const MAX_ZOOM = 2;
+interface AppStore {
+  // View navigation
+  currentView: AppView;
+  setView: (view: AppView) => void;
 
-export const useCanvasStore = create<CanvasStore>((set, get) => ({
-  // Flow data
-  flow: null,
-  setFlow: (flow) => set({ flow, selectedNodeId: null }),
+  // Integrations list
+  integrations: StoredIntegration[];
+  addIntegration: (flow: IntegrationFlow) => StoredIntegration;
+  removeIntegration: (id: string) => void;
 
-  // Viewport
-  viewport: DEFAULT_VIEWPORT,
-  setViewport: (viewport) => set({ viewport }),
+  // Current integration being viewed
+  currentIntegration: StoredIntegration | null;
+  openIntegration: (id: string) => void;
+  closeIntegration: () => void;
 
-  pan: (deltaX, deltaY) =>
+  // Node selection
+  selectedNodeId: string | null;
+  selectNode: (id: string | null) => void;
+  findNode: (id: string) => ActivityNode | ControlFlowContainer | null;
+
+  // Side panel
+  isSidePanelOpen: boolean;
+  openSidePanel: () => void;
+  closeSidePanel: () => void;
+
+  // Viewport for canvas
+  viewport: ViewportState;
+  pan: (dx: number, dy: number) => void;
+  zoom: (factor: number, cx?: number, cy?: number) => void;
+  resetViewport: () => void;
+
+  // Panning state
+  isPanning: boolean;
+  setIsPanning: (v: boolean) => void;
+}
+
+const DEFAULT_VIEWPORT: ViewportState = { x: 60, y: 60, zoom: 1 };
+
+// Count all nodes including nested
+function countNodes(nodes: (ActivityNode | ControlFlowContainer)[]): number {
+  let count = 0;
+  for (const node of nodes) {
+    count++;
+    if ('children' in node && node.children) {
+      count += countNodes(node.children);
+    }
+    if ('routes' in node && node.routes) {
+      for (const route of node.routes) {
+        count += countNodes(route.children);
+      }
+    }
+  }
+  return count;
+}
+
+export const useAppStore = create<AppStore>((set, get) => ({
+  // View
+  currentView: 'dashboard',
+  setView: (view) => set({ currentView: view }),
+
+  // Integrations
+  integrations: [],
+
+  addIntegration: (flow) => {
+    const integration: StoredIntegration = {
+      id: `${flow.id || 'int'}-${Date.now()}`,
+      name: flow.name,
+      displayName: flow.displayName || flow.name,
+      description: flow.description,
+      version: flow.version,
+      importedAt: new Date().toISOString(),
+      nodeCount: countNodes(flow.nodes),
+      flow,
+    };
     set((state) => ({
-      viewport: {
-        ...state.viewport,
-        x: state.viewport.x + deltaX,
-        y: state.viewport.y + deltaY,
-      },
+      integrations: [integration, ...state.integrations],
+    }));
+    return integration;
+  },
+
+  removeIntegration: (id) =>
+    set((state) => ({
+      integrations: state.integrations.filter((i) => i.id !== id),
+      currentIntegration: state.currentIntegration?.id === id ? null : state.currentIntegration,
     })),
 
-  zoom: (factor, centerX = 0, centerY = 0) =>
-    set((state) => {
-      const newZoom = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, state.viewport.zoom * factor));
-      const zoomRatio = newZoom / state.viewport.zoom;
+  // Current integration
+  currentIntegration: null,
 
-      return {
-        viewport: {
-          x: centerX - (centerX - state.viewport.x) * zoomRatio,
-          y: centerY - (centerY - state.viewport.y) * zoomRatio,
-          zoom: newZoom,
-        },
-      };
+  openIntegration: (id) => {
+    const integration = get().integrations.find((i) => i.id === id);
+    if (integration) {
+      set({
+        currentIntegration: integration,
+        currentView: 'flow',
+        selectedNodeId: null,
+        viewport: DEFAULT_VIEWPORT,
+      });
+    }
+  },
+
+  closeIntegration: () =>
+    set({
+      currentIntegration: null,
+      currentView: 'dashboard',
+      selectedNodeId: null,
     }),
 
-  resetViewport: () => set({ viewport: DEFAULT_VIEWPORT }),
-
-  // Selection
+  // Node selection
   selectedNodeId: null,
-  selectNode: (nodeId) => set({ selectedNodeId: nodeId }),
+  selectNode: (id) => set({ selectedNodeId: id }),
 
-  // Hover
-  hoveredNodeId: null,
-  setHoveredNode: (nodeId) => set({ hoveredNodeId: nodeId }),
-
-  // Interaction
-  isPanning: false,
-  setIsPanning: (isPanning) => set({ isPanning }),
-
-  // Find node helper
   findNode: (nodeId) => {
-    const { flow } = get();
-    if (!flow) return null;
+    const integration = get().currentIntegration;
+    if (!integration) return null;
 
-    const searchNodes = (
-      nodes: (ActivityNode | ControlFlowContainer)[]
-    ): ActivityNode | ControlFlowContainer | null => {
+    const search = (nodes: (ActivityNode | ControlFlowContainer)[]): ActivityNode | ControlFlowContainer | null => {
       for (const node of nodes) {
         if (node.id === nodeId) return node;
         if ('children' in node && node.children) {
-          const found = searchNodes(node.children);
+          const found = search(node.children);
           if (found) return found;
         }
         if ('routes' in node && node.routes) {
           for (const route of node.routes) {
-            const found = searchNodes(route.children);
+            const found = search(route.children);
             if (found) return found;
           }
         }
@@ -123,89 +159,35 @@ export const useCanvasStore = create<CanvasStore>((set, get) => ({
       return null;
     };
 
-    return searchNodes(flow.nodes);
+    return search(integration.flow.nodes);
   },
-}));
 
-// ============================================
-// UI Store
-// ============================================
-
-interface UIStore {
-  // Side panel
-  isSidePanelOpen: boolean;
-  toggleSidePanel: () => void;
-  openSidePanel: () => void;
-  closeSidePanel: () => void;
-
-  // Minimap
-  isMiniMapVisible: boolean;
-  toggleMiniMap: () => void;
-
-  // File dialog
-  isFileDialogOpen: boolean;
-  setFileDialogOpen: (isOpen: boolean) => void;
-
-  // Breadcrumbs
-  breadcrumbs: BreadcrumbItem[];
-  setBreadcrumbs: (breadcrumbs: BreadcrumbItem[]) => void;
-  pushBreadcrumb: (item: BreadcrumbItem) => void;
-  popBreadcrumb: () => void;
-
-  // Container expansion state
-  expandedContainers: Set<string>;
-  toggleContainer: (containerId: string) => void;
-  expandContainer: (containerId: string) => void;
-  collapseContainer: (containerId: string) => void;
-  isContainerExpanded: (containerId: string) => boolean;
-}
-
-export const useUIStore = create<UIStore>((set, get) => ({
   // Side panel
   isSidePanelOpen: false,
-  toggleSidePanel: () => set((state) => ({ isSidePanelOpen: !state.isSidePanelOpen })),
   openSidePanel: () => set({ isSidePanelOpen: true }),
   closeSidePanel: () => set({ isSidePanelOpen: false }),
 
-  // Minimap
-  isMiniMapVisible: true,
-  toggleMiniMap: () => set((state) => ({ isMiniMapVisible: !state.isMiniMapVisible })),
-
-  // File dialog
-  isFileDialogOpen: false,
-  setFileDialogOpen: (isOpen) => set({ isFileDialogOpen: isOpen }),
-
-  // Breadcrumbs
-  breadcrumbs: [],
-  setBreadcrumbs: (breadcrumbs) => set({ breadcrumbs }),
-  pushBreadcrumb: (item) =>
-    set((state) => ({ breadcrumbs: [...state.breadcrumbs, item] })),
-  popBreadcrumb: () =>
-    set((state) => ({ breadcrumbs: state.breadcrumbs.slice(0, -1) })),
-
-  // Container expansion
-  expandedContainers: new Set<string>(),
-  toggleContainer: (containerId) =>
+  // Viewport
+  viewport: DEFAULT_VIEWPORT,
+  pan: (dx, dy) =>
+    set((state) => ({
+      viewport: { ...state.viewport, x: state.viewport.x + dx, y: state.viewport.y + dy },
+    })),
+  zoom: (factor, cx = 0, cy = 0) =>
     set((state) => {
-      const newSet = new Set(state.expandedContainers);
-      if (newSet.has(containerId)) {
-        newSet.delete(containerId);
-      } else {
-        newSet.add(containerId);
-      }
-      return { expandedContainers: newSet };
+      const newZoom = Math.max(0.3, Math.min(2, state.viewport.zoom * factor));
+      const ratio = newZoom / state.viewport.zoom;
+      return {
+        viewport: {
+          x: cx - (cx - state.viewport.x) * ratio,
+          y: cy - (cy - state.viewport.y) * ratio,
+          zoom: newZoom,
+        },
+      };
     }),
-  expandContainer: (containerId) =>
-    set((state) => {
-      const newSet = new Set(state.expandedContainers);
-      newSet.add(containerId);
-      return { expandedContainers: newSet };
-    }),
-  collapseContainer: (containerId) =>
-    set((state) => {
-      const newSet = new Set(state.expandedContainers);
-      newSet.delete(containerId);
-      return { expandedContainers: newSet };
-    }),
-  isContainerExpanded: (containerId) => get().expandedContainers.has(containerId),
+  resetViewport: () => set({ viewport: DEFAULT_VIEWPORT }),
+
+  // Panning
+  isPanning: false,
+  setIsPanning: (v) => set({ isPanning: v }),
 }));
